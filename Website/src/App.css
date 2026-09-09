@@ -1,0 +1,97 @@
+.card-name{
+    font-weight: 900;
+    color: azure;
+}
+
+#root{
+    background-size: cover;
+    background-position: center;
+    background-image: url("./assets/grid.jpg");
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+#search{
+    margin-top: auto;
+    border-radius: 15px;
+    border-width: 1px;
+    border-color: black;
+    background-color: rgba(255,255,255, 0.5);
+    color: rgba(0, 0,0, 0.9);
+}
+
+#search:focus{
+    outline: none;
+    border-radius: 15px;
+    border-color: black;
+    background-color: rgba(255,255,255, 0.3);
+}
+
+.search-bar{
+    display: flex;
+    justify-content: center;
+}
+
+.search-bar label{
+    color:azure;
+    font-size: 20px;
+}
+
+.card-data h4 p a{
+    color: aqua;
+} 
+
+.search-input{
+    display: flex;
+    align-items: center;
+    height: fit-content;
+    padding: 2px;
+}
+
+.display-results{
+    padding: 0;
+    margin: 50px auto 0;
+    width:  250px;
+    display: flex;
+    justify-content: center;
+}
+
+.display-results-multi{
+    display: inline-flex;
+}
+
+.set-name{
+    margin-bottom: 4px;
+    color: azure;
+}   
+
+.pricecharting p{
+    font-family: "Roberto", sans-serif;
+    margin-top: 0px;
+    color: azure;
+}
+
+.pricecharting{
+    margin: 0px;
+}
+
+.tcg-player p{
+    font-family: "Roberto", sans-serif;
+    color: azure;
+}
+
+.card-data{
+    border-radius: 30px;
+    border: 1px solid rgba(255,255,255, 0.1);
+    width: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.results-background{
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
