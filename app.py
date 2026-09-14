@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from scraper import get_card
+from ImageRecognition.imageRec import testModel
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -9,7 +10,13 @@ CORS(app, origins=["http://localhost:5173"])
 def callApi():
     query = request.args.get("q")
     return jsonify(get_card(query))
-
+@app.get('/scan-pokemon', methods = ["POST"])
+def callApi():
+    images = request.files.getlist("images")
+    ids = []
+    for img in images:
+        ids.extend(testModel(img))
+    return jsonify(get_card(ids))
 # Run the app locally if this file is executed directly
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback} from 'react';
 import './App.css';
 import LiquidGlassBackground from "./LiquidGlassBackground";
 import gridImg from './assets/grid.jpg';
+import Webcam from "react-webcam";
 
 interface CardData {"PokemonInfo": {"Name": string, "setName": string, "cardID": string, "Image": string}, "PriceCharting": {"PSA 10": string, "Ungraded": string, "Grade9": string ,"Link": string}, "TCGPlayer": {"High Price": string, "Mid Price": string, "Low Price": string, "Market Price": string, "Link": string}, "cardMarket": {"Avg Price": string, "Low Price": string, "Link": string}}
 function displayCard(cardData: CardData, index: number){
@@ -35,40 +36,79 @@ function displayCard(cardData: CardData, index: number){
   );
 }
 function App() {
+  const [activeTab, setActiveTab] = useState<"search" | "image">("search")
   const [cardId, setCardId] = useState("");
   const [data, setData] = useState<CardData[]>([]);
   const [inputStatus, setInputStatus] = useState("Enter card id");
   const [error, setError] = useState(false);
+  const [image, setImage] = useState<String[]>([]); //stores images encoded in base 64 (like they are outputted from webcam class)
+  const webcamRef = useRef<Webcam>(null);
   const listRef = useRef<HTMLUListElement>(null);
-  return(
+  const videoConstraints = {
+    width: 1920,
+    height: 1080,
+    facingMode: "environment"
+  };
+  function handleScreenshot(){
+    const screenShot = webcamRef.current?.getScreenshot();
+    if(typeof screenShot == "string"){
+      setImage([...image, screenShot]);
+    }
+    console.log("imageTaken")
+  }
+  return( 
     <div id = "root">
-      <div className = "search-bar">
-        <label htmlFor = "search">Enter card ID</label>
-        <input id = "search" 
-        placeholder = {inputStatus}
-        className = "search-input"
-        type = "text" 
-        value = {cardId} 
-        onChange = {(event) => setCardId(event.target.value)} 
-        onKeyDown={async (event) => {
-            if(event.key === "Enter"){
-            setError(false);
-            const response = await fetch(`http://127.0.0.1:5000/pokemon?q=${cardId}`);
-            if(response.ok){
-              const newData = await response.json(); //make sure react gets the new data before rendering which setData(await response.json()) does not do
-              setData(newData);
-              console.log(newData);
-            }
-            else{
-              setCardId("");
-              setError(true);
-            setInputStatus(`An error has occured code: ${response.status}`);
+      <div className = "search-island">
+        <div className = "search-bar">
+          <label htmlFor = "search">Enter card ID</label>
+          <input id = "search" 
+          placeholder = {inputStatus}
+          className = "search-input"
+          type = "text" 
+          value = {cardId} 
+          onChange = {(event) => setCardId(event.target.value)} 
+          onKeyDown={async (event) => {
+              if(event.key === "Enter"){
+              setError(false);
+              const response = await fetch(`http://127.0.0.1:5000/pokemon?q=${cardId}`);
+              if(response.ok){
+                const newData = await response.json(); //make sure react gets the new data before rendering which setData(await response.json()) does not do
+                setData(newData);
+                console.log(newData);
+              }
+              else{
+                setCardId("");
+                setError(true);
+              setInputStatus(`An error has occured code: ${response.status}`);
+              }
             }
           }
-        }
-        }/>
+          }/>
+        </div>
+        <button 
+          className = "swap-to-image"
+          onClick = {() => setActiveTab("image")}
+        >
+          <img src = "/public/cameraIcon.png"/>
+          Use Image
+        </button>
       </div>
-      {error ? (
+      {activeTab === "image" ? (
+        <>
+          <Webcam
+            audio = {false} 
+            ref = {webcamRef} 
+            screenshotFormat = "image/jpeg"
+            videoConstraints = {videoConstraints}
+            />
+            <button
+              className = "take-image"
+              onClick = {() => handleScreenshot()} 
+            />
+          </>
+        ) : (null)
+      }
+      {(error && activeTab === "search") ? (
             <>
               <h1 className = "sorry-title">Sorry...</h1>
               <p className = "error-text">Card could not be found</p>

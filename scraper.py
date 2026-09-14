@@ -23,60 +23,61 @@ def get_card(cardFractions):
             return tab.content()
         finally:
             tab.close()
-    cardInfo = requests.get(pokewallet, headers = apiKey, params = {"q":f"{cardFractions}"}).json()
-    result = []
-    for i in range(len(cardInfo["results"])):
-        pokemonName = formatString(cardInfo["results"][i]["card_info"]["name"])
-        setName = formatString(cardInfo["results"][i]["card_info"]["set_name"])
-        pokemonNumber = cardFractions.split("/")[0]
-        url = f"https://www.pricecharting.com/game/pokemon-{setName}/{pokemonName}-{pokemonNumber}"
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, "html.parser")
-        bumLink = True;
-        try:
-            PSA10 = soup.find("td", string = "PSA 10").find_next_sibling("td").text
-            bumLink = False;
-        except Exception:
-            PSA10 = "-"
-        try:
-            ungraded = soup.find("td", string = "Ungraded").find_next_sibling("td").text 
-            bumLink = False;
-        except Exception:
-            ungraded = "-"
-        try:
-            Grade9 = soup.find("td", string = "Grade 9").find_next_sibling("td").text
-            bumLink = False;
-        except Exception:
-            Grade9 = "-"
-        if(bumLink): #prevents it from linking to a pricecharting search page instead of the actual link
-            url = "-"
-        
-        imgPage = None
-        imgFinder = None
-        image = "none"
-        try:
-            imgPage = requests.get(url)
-            imgFinder = BeautifulSoup(imgPage.text, "html.parser")
-            image = imgFinder.find("img", class_ = "js-show-dialog")["src"]   
-        except Exception:
+    for i in range(0, len(cardFractions), 1):
+        cardInfo = requests.get(pokewallet, headers = apiKey, params = {"q":f"{cardFractions[i]}"}).json()
+        result = []
+        for i in range(len(cardInfo["results"])):
+            pokemonName = formatString(cardInfo["results"][i]["card_info"]["name"])
+            setName = formatString(cardInfo["results"][i]["card_info"]["set_name"])
+            pokemonNumber = cardFractions[i].split("/")[0]
+            url = f"https://www.pricecharting.com/game/pokemon-{setName}/{pokemonName}-{pokemonNumber}"
+            response = requests.get(url)
+            soup = BeautifulSoup(response.text, "html.parser")
+            bumLink = True;
             try:
-                print("bums")
-                imgPage = return_page(cardInfo["results"][i]["tcgplayer"]["url"])
-                imgFinder = BeautifulSoup(imgPage, "html.parser")
-                image = imgFinder.find("img", class_ = "v-lazy-image-loaded")["src"]
-                
+                PSA10 = soup.find("td", string = "PSA 10").find_next_sibling("td").text
+                bumLink = False;
             except Exception:
-                traceback.print_exc()
-        TCGhigh = "-"
-        TCGmid = "-"
-        TCGlow = "-"
-        TCGmarket = "-"
-        TCGlink = "null"
-        if(cardInfo["results"][i]["tcgplayer"] is not None): 
-            TCGhigh = cardInfo["results"][i]["tcgplayer"]["prices"][0]["high_price"]
-            TCGmid = cardInfo["results"][i]["tcgplayer"]["prices"][0]["mid_price"]
-            TCGlow = cardInfo["results"][i]["tcgplayer"]["prices"][0]["low_price"] 
-            TCGmarket = cardInfo["results"][i]["tcgplayer"]["prices"][0]["market_price"]
-            TCGlink = cardInfo["results"][i]["tcgplayer"]["url"]
-        result.append({"PokemonInfo": {"Name": pokemonName, "setName": setName, "cardID": cardFractions, "Image" : image}, "PriceCharting": {"PSA 10": PSA10, "Grade9": Grade9 , "Ungraded": ungraded, "Link": url}, "TCGPlayer": {"High Price": TCGhigh, "Mid Price": TCGmid, "Low Price": TCGlow, "Market Price": TCGmarket, "Link": TCGlink}})
+                PSA10 = "-"
+            try:
+                ungraded = soup.find("td", string = "Ungraded").find_next_sibling("td").text 
+                bumLink = False;
+            except Exception:
+                ungraded = "-"
+            try:
+                Grade9 = soup.find("td", string = "Grade 9").find_next_sibling("td").text
+                bumLink = False;
+            except Exception:
+                Grade9 = "-"
+            if(bumLink): #prevents it from linking to a pricecharting search page instead of the actual link
+                url = "-"
+            
+            imgPage = None
+            imgFinder = None
+            image = "none"
+            try:
+                imgPage = requests.get(url)
+                imgFinder = BeautifulSoup(imgPage.text, "html.parser")
+                image = imgFinder.find("img", class_ = "js-show-dialog")["src"]   
+            except Exception:
+                try:
+                    print("bums")
+                    imgPage = return_page(cardInfo["results"][i]["tcgplayer"]["url"])
+                    imgFinder = BeautifulSoup(imgPage, "html.parser")
+                    image = imgFinder.find("img", class_ = "v-lazy-image-loaded")["src"]
+                    
+                except Exception:
+                    traceback.print_exc()
+            TCGhigh = "-"
+            TCGmid = "-"
+            TCGlow = "-"
+            TCGmarket = "-"
+            TCGlink = "null"
+            if(cardInfo["results"][i]["tcgplayer"] is not None): 
+                TCGhigh = cardInfo["results"][i]["tcgplayer"]["prices"][0]["high_price"]
+                TCGmid = cardInfo["results"][i]["tcgplayer"]["prices"][0]["mid_price"]
+                TCGlow = cardInfo["results"][i]["tcgplayer"]["prices"][0]["low_price"] 
+                TCGmarket = cardInfo["results"][i]["tcgplayer"]["prices"][0]["market_price"]
+                TCGlink = cardInfo["results"][i]["tcgplayer"]["url"]
+            result.append({"PokemonInfo": {"Name": pokemonName, "setName": setName, "cardID": cardFractions[i], "Image" : image}, "PriceCharting": {"PSA 10": PSA10, "Grade9": Grade9 , "Ungraded": ungraded, "Link": url}, "TCGPlayer": {"High Price": TCGhigh, "Mid Price": TCGmid, "Low Price": TCGlow, "Market Price": TCGmarket, "Link": TCGlink}})
     return result
