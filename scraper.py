@@ -25,6 +25,8 @@ def get_card(cardFractions):
             tab.close()
     for i in range(0, len(cardFractions), 1):
         cardInfo = requests.get(pokewallet, headers = apiKey, params = {"q":f"{cardFractions[i]}"}).json()
+        if(len(cardInfo["results"]) == 0):
+            return "ERROR card not found in database"
         result = []
         for i in range(len(cardInfo["results"])):
             pokemonName = formatString(cardInfo["results"][i]["card_info"]["name"])
@@ -61,7 +63,7 @@ def get_card(cardFractions):
                 image = imgFinder.find("img", class_ = "js-show-dialog")["src"]   
             except Exception:
                 try:
-                    print("bums")
+                    print("could not find card")
                     imgPage = return_page(cardInfo["results"][i]["tcgplayer"]["url"])
                     imgFinder = BeautifulSoup(imgPage, "html.parser")
                     image = imgFinder.find("img", class_ = "v-lazy-image-loaded")["src"]

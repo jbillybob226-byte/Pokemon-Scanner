@@ -1,7 +1,5 @@
-import { useState, useRef, useCallback} from 'react';
+import { useState, useRef} from 'react';
 import './App.css';
-import LiquidGlassBackground from "./LiquidGlassBackground";
-import gridImg from './assets/grid.jpg';
 import Webcam from "react-webcam";
 
 interface CardData {"PokemonInfo": {"Name": string, "setName": string, "cardID": string, "Image": string}, "PriceCharting": {"PSA 10": string, "Ungraded": string, "Grade9": string ,"Link": string}, "TCGPlayer": {"High Price": string, "Mid Price": string, "Low Price": string, "Market Price": string, "Link": string}, "cardMarket": {"Avg Price": string, "Low Price": string, "Link": string}}
@@ -41,7 +39,7 @@ function App() {
   const [data, setData] = useState<CardData[]>([]);
   const [inputStatus, setInputStatus] = useState("Enter card id");
   const [error, setError] = useState(false);
-  const [image, setImage] = useState<String[]>([]); //stores images encoded in base 64 (like they are outputted from webcam class)
+  const [images, setImage] = useState<string[]>([]); //stores images encoded in base 64 (like they are outputted from webcam class)
   const webcamRef = useRef<Webcam>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const videoConstraints = {
@@ -52,12 +50,42 @@ function App() {
   function handleScreenshot(){
     const screenShot = webcamRef.current?.getScreenshot();
     if(typeof screenShot == "string"){
-      setImage([...image, screenShot]);
+      setImage([...images, screenShot]);
     }
     console.log("imageTaken")
   }
+  async function callAPI(collId: string){
+    const response = await fetch(`http://127.0.0.1:5000/pokemon?q=${collId}`);
+    if(response.ok){
+      const newData = await response.json(); //make sure react gets the new data before rendering which setData(await response.json()) does not do
+      setData(newData);
+      console.log(newData);
+    }
+    else{
+      setCardId("");
+      setError(true);
+    setInputStatus(`An error has occured code: ${response.status}`);
+    }
+  }
+  async function sendImages(){
+    const formData = new FormData()
+    images.map((img) => formData.append("images", img))
+    const response = await fetch("http://127.0.0.1:5000/scan-pokemon", {
+      method: 'POST',
+      body: formData
+    });
+    if (!response.ok) 
+    { 
+        console.log(response.status);
+    }
+    else{
+      console.log("SUCCESS!!!")
+      //call the api using each of the card ids
+    }
+
+  }
   return( 
-    <div id = "root">
+    <div id = "top-wrapper">
       <div className = "search-island">
         <div className = "search-bar">
           <label htmlFor = "search">Enter card ID</label>
@@ -68,19 +96,9 @@ function App() {
           value = {cardId} 
           onChange = {(event) => setCardId(event.target.value)} 
           onKeyDown={async (event) => {
-              if(event.key === "Enter"){
+            if(event.key === "Enter"){
               setError(false);
-              const response = await fetch(`http://127.0.0.1:5000/pokemon?q=${cardId}`);
-              if(response.ok){
-                const newData = await response.json(); //make sure react gets the new data before rendering which setData(await response.json()) does not do
-                setData(newData);
-                console.log(newData);
-              }
-              else{
-                setCardId("");
-                setError(true);
-              setInputStatus(`An error has occured code: ${response.status}`);
-              }
+              await callAPI(cardId)
             }
           }
           }/>
@@ -105,6 +123,9 @@ function App() {
               className = "take-image"
               onClick = {() => handleScreenshot()} 
             />
+            <button className = "send-images" onClick = {sendImages}>
+              Ready!
+            </button>
           </>
         ) : (null)
       }
@@ -114,20 +135,10 @@ function App() {
               <p className = "error-text">Card could not be found</p>
             </>
         ) : (
-          <LiquidGlassBackground
-            imageSrc= {gridImg}
-            glassTargetRef={listRef}
-            className="results-background"
-            contentClassName="results-content"
-            edgeSoftness={0}
-            speed={0.6}
-          >
             <ul ref = {listRef} className = {data.length > 1 ? "display-results-multi" : "display-results"}>{data.map((card, i) => displayCard(card, i))}</ul> 
-          </LiquidGlassBackground>
         )
         }
     </div>
   );
 }
-
 export default App
