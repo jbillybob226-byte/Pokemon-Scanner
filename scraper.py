@@ -12,7 +12,7 @@ def formatString(input):
     return input
 pokewallet = "https://api.pokewallet.io/search"
 apiKey = {"X-API-Key": "pk_test_1455fa770d0218620d4b6b8a16d4be1317de0767e0417a54"}
-def get_card(cardFractions): 
+def get_card(cardFractions: list[str]): 
     p = sync_playwright().start()
     browser = p.chromium.launch(headless = True)
     def return_page(url):
@@ -26,11 +26,11 @@ def get_card(cardFractions):
     for i in range(0, len(cardFractions), 1):
         cardInfo = requests.get(pokewallet, headers = apiKey, params = {"q":f"{cardFractions[i]}"}).json()
         if(len(cardInfo["results"]) == 0):
-            return "ERROR card not found in database"
+            return "404 NotFound"
         result = []
-        for i in range(len(cardInfo["results"])):
-            pokemonName = formatString(cardInfo["results"][i]["card_info"]["name"])
-            setName = formatString(cardInfo["results"][i]["card_info"]["set_name"])
+        for n in range(0, len(cardInfo["results"]), 1):
+            pokemonName = formatString(cardInfo["results"][n]["card_info"]["name"])
+            setName = formatString(cardInfo["results"][n]["card_info"]["set_name"])
             pokemonNumber = cardFractions[i].split("/")[0]
             url = f"https://www.pricecharting.com/game/pokemon-{setName}/{pokemonName}-{pokemonNumber}"
             response = requests.get(url)
@@ -64,7 +64,7 @@ def get_card(cardFractions):
             except Exception:
                 try:
                     print("could not find card")
-                    imgPage = return_page(cardInfo["results"][i]["tcgplayer"]["url"])
+                    imgPage = return_page(cardInfo["results"][n]["tcgplayer"]["url"])
                     imgFinder = BeautifulSoup(imgPage, "html.parser")
                     image = imgFinder.find("img", class_ = "v-lazy-image-loaded")["src"]
                     
@@ -75,11 +75,11 @@ def get_card(cardFractions):
             TCGlow = "-"
             TCGmarket = "-"
             TCGlink = "null"
-            if(cardInfo["results"][i]["tcgplayer"] is not None): 
-                TCGhigh = cardInfo["results"][i]["tcgplayer"]["prices"][0]["high_price"]
-                TCGmid = cardInfo["results"][i]["tcgplayer"]["prices"][0]["mid_price"]
-                TCGlow = cardInfo["results"][i]["tcgplayer"]["prices"][0]["low_price"] 
-                TCGmarket = cardInfo["results"][i]["tcgplayer"]["prices"][0]["market_price"]
-                TCGlink = cardInfo["results"][i]["tcgplayer"]["url"]
+            if(cardInfo["results"][n]["tcgplayer"] is not None): 
+                TCGhigh = cardInfo["results"][n]["tcgplayer"]["prices"][0]["high_price"]
+                TCGmid = cardInfo["results"][n]["tcgplayer"]["prices"][0]["mid_price"]
+                TCGlow = cardInfo["results"][n]["tcgplayer"]["prices"][0]["low_price"] 
+                TCGmarket = cardInfo["results"][n]["tcgplayer"]["prices"][0]["market_price"]
+                TCGlink = cardInfo["results"][n]["tcgplayer"]["url"]
             result.append({"PokemonInfo": {"Name": pokemonName, "setName": setName, "cardID": cardFractions[i], "Image" : image}, "PriceCharting": {"PSA 10": PSA10, "Grade9": Grade9 , "Ungraded": ungraded, "Link": url}, "TCGPlayer": {"High Price": TCGhigh, "Mid Price": TCGmid, "Low Price": TCGlow, "Market Price": TCGmarket, "Link": TCGlink}})
     return result

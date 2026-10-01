@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from scraper import get_card
 from ImageRecognition.imageRec import testModel
 from flask_cors import CORS
@@ -13,7 +13,8 @@ def callApi():
     query = request.args.get("q")
     result = get_card([query])
     print(result)
-
+    if result == "404 NotFound":
+        abort(404)
     return jsonify(result)
 @app.route('/scan-pokemon', methods = ['POST'])
 def callApiFromImage():
