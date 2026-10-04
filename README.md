@@ -4,3 +4,4 @@ TODO
 - improve ui
 - set it up on a server
 - cache search results to potentially increase speed using redis
+- Make the callApiFromImage function return the images in a filetype that the website can actually display
