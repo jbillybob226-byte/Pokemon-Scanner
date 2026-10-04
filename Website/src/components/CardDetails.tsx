@@ -40,7 +40,7 @@ export default function CardDetails({cardData, index}: CardDetailsProps){
                     </p>
                 </h4>
             <DialogFooter className="flex items-center self-stretch h-13">
-                <DialogClose render={<button className = " w-11 h-7 bg-blue-500 rounded-[5px]">Close</button>} />
+                <DialogClose render={<button className = "ml-auto w-11 h-7 bg-blue-500 rounded-[5px]">Close</button>} />
             </DialogFooter>
             </DialogContent>
         </Dialog>

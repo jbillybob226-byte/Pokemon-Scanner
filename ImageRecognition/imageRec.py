@@ -28,19 +28,21 @@ def drawOcr(image, ocrResults, confThreshold):
 
 output_folder = "cropped_cards"
 os.makedirs(output_folder, exist_ok=True,)
+
+#returns a dicitonary where the keys are the images in a numpy array and the value is the detected card id
 def testModel(inputImage):
     croppedImages = []
-    collectorIds = []
+    infrence = {}
     rawDetect = []
-    # Load your trained weights instead of the generic pretrained model
     model = YOLO("runs/detect/train-2/weights/best.pt")
     results = model.predict(inputImage, save=False, conf=0.25)
-    for result in results: #the reason this loops is incase the user imputes a folder of images all at once
+    for result in results: #.predict returns a list of results objects so we have to loop it
         img = result.orig_img
         for box in result.boxes:
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             cropped_image = img[y1:y2, x1:x2]
             croppedImages.append(cropped_image)
+            infrence[croppedImages] = ""
     ocrResults = ocr.predict(croppedImages)
     for i, image in enumerate(croppedImages):
         filePath = os.path.join(output_folder, f"annotated_{i}.jpg")
@@ -61,10 +63,10 @@ def testModel(inputImage):
                     else: #when we hit the end of the collector id break
                         break
                 if left and right: #this only runs if both of them are not empty
-                  collectorIds.append(left + "/" + right)  
-    print(collectorIds)
+                  infrence[image] = left + "/" + right
+    print(infrence["id"])
     print(rawDetect)
-    return collectorIds
+    return infrence
 if __name__ == "__main__":
     #train()
     testModel()

@@ -17,17 +17,17 @@ function App(){
   const [data, setData] = useState<CardData[]>([]);
   const [renderResults, setRenderResults] = useState<boolean>(false) 
   const [inputStatus, setInputStatus] = useState("Enter collector Id");
-  const [images, setImage] = useState<string[]>([]); //stores images encoded in base 64 (like they are outputted from webcam class)
+  const [images, setImages] = useState<string[]>([]); //stores images encoded in base 64 (like they are outputted from webcam class)
   const webcamRef = useRef<Webcam>(null);
   const videoConstraints = {
-    width: 1920,
+    width: 720,
     height: 1080,
     facingMode: "environment"
   };
   function handleScreenshot(){
     const screenShot = webcamRef.current?.getScreenshot();
     if(typeof screenShot == "string"){
-      setImage([...images, screenShot]);
+      setImages([...images, screenShot]);
     }
     console.log("imageTaken")
   }
@@ -58,17 +58,18 @@ function App(){
     else{
         console.log("SUCCESS!!!")
         setRenderResults(true)
+        setImages([])
         //call the api using each of the card ids
     }
   }
   return( 
     <div className = "flex flex-col bg-[url('assets/grid.jpg')] bg-cover min-h-screen">
-        <div className = "sticky top-0">
+        <div className = "sticky top-0 mb-5">
             <div className = "gap-[10px] flex justify-center align-center">
-                <label htmlFor = "search" className='text-[rgba(240,248,255)]'>WEBSITE NAME (change later)</label>
+                <label className='whitespace-nowrap text-[16px] text-[rgba(240,248,255)]'>Pokescanner</label>
                 <input id = "search" 
                     placeholder = {inputStatus}
-                    className = "flex items-center justify-center h-fit p-0.5 px-5 mt-auto rounded-[15px] border-1 border-black bg-[rgba(255,255,255,0.5)] focus:bg-[rgba(255,255,255,0.3)] focus:outline-2 focus:outline-black"
+                    className = "flex items-center justify-center h-[32px] min-w-[100px] max-w-[250px] py-0.5 px-[clamp(0px,2vh,20px)] mt-auto rounded-[15px] border-1 border-black bg-[rgba(255,255,255,0.5)] focus:bg-[rgba(255,255,255,0.3)] focus:outline-2 focus:outline-black whitespace-nowrap text-[16px]"
                     type = "text" 
                     value = {cardId} 
                     onChange = {(event) => setCardId(event.target.value)} 
@@ -80,26 +81,30 @@ function App(){
                     }
                 }/>
                 <button 
-                    className = "swap-to-image"
+                    className = "whitespace-nowrap text-[clamp(8px,2vw,16px)] bg-[rgba(255,255,255,0.5)] border-black text-black rounded-[10px] border flex justify-center items-center h-[30px]"
                     onClick = {() => 
                         {setRenderResults(false)
                         setActiveTab(activeTab === "image" ? "search": "image")}}
                     >
-                    <img src = "/public/cameraIcon.png"/>
-                        Use Image
+                    <img className = "min-w-[20px] h-[20px]" src = "/public/cameraIcon.png"/>
+                        <span className='hidden min-[300px]:flex'>
+                           Use Image 
+                        </span>
+                        
                 </button>
             </div>
       </div>
         {activeTab === "image" ? (
-            <>
+            <div className = "flex flex-col justify-center items-center">
                 <Webcam
+                    className = "pb-3 w-[250px] aspect-[9/16] object-cover"
                     audio = {false} 
                     ref = {webcamRef} 
                     screenshotFormat = "image/jpeg"
                     videoConstraints = {videoConstraints}
                 />
                 <button
-                    className = "w-40 h-10 mb-5 bg-blue-500"
+                    className = "w-40 h-10 mb-3 bg-blue-500"
                     onClick = {() => handleScreenshot()} 
                 >
                     Take Image
@@ -107,7 +112,8 @@ function App(){
                 <button className = "bg-blue-500" onClick = {sendImages}>
                     Ready!
                 </button>
-            </>
+                <ul className='flex flex-col gap-y-5'>{images.map((picture) => <img src = {picture}></img>)}</ul>
+            </div>
             ) : (null)
         }
         {(renderResults) ? (
