@@ -9,8 +9,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-type CardDetailsProps = {cardData: CardData, index: number}
-export default function CardDetails({cardData, index}: CardDetailsProps){
+type CardDetailsProps = {cardData: CardData}
+export default function CardDetails({cardData}: CardDetailsProps){
     return(
         <Dialog>
             <DialogTrigger render={<button><img className = "w-30 h-40" src = {cardData["PokemonInfo"]["Image"]} alt = "Pokemon card image"/> </button>}/>
@@ -24,17 +24,17 @@ export default function CardDetails({cardData, index}: CardDetailsProps){
                 </h3>
                 <h4 className = "text-white">
                     <p className='font-[Roberto, sans-serif] mt-0'>
-                        PSA 10: {cardData["PriceCharting"]["PSA 10"]} <br />
-                        Grade 9: {cardData["PriceCharting"]["Grade9"]} <br />
-                        Ungraded: {cardData["PriceCharting"]["Ungraded"]} <br />
+                        PSA 10: {cardData["PriceCharting"]["PSA 10"]} <br/>
+                        Grade 9: {cardData["PriceCharting"]["Grade9"]} <br/>
+                        Ungraded: {cardData["PriceCharting"]["Ungraded"]} <br/>
                         {cardData["PriceCharting"]["Link"] != "-" && <a className = "text-blue-500" href = {cardData["PriceCharting"]["Link"]}>PriceCharting</a>}
                     </p>
                 </h4>
                 <h4 className = "text-white">
                     <p className='font-[Roberto, sans-serif] color-[rgba(240,255,255)]'>
-                        High Price: ${cardData["TCGPlayer"]["High Price"]} <br />
-                        Mid Price: ${cardData["TCGPlayer"]["Mid Price"]} <br />
-                        Low Price: ${cardData["TCGPlayer"]["Low Price"]} <br />
+                        High Price: ${cardData["TCGPlayer"]["High Price"]} <br/>
+                        Mid Price: ${cardData["TCGPlayer"]["Mid Price"]} <br/>
+                        Low Price: ${cardData["TCGPlayer"]["Low Price"]} <br/>
                         Market Price: ${cardData["TCGPlayer"]["Market Price"]} <br/>
                         {cardData["TCGPlayer"]["Link"] != "null" && <a className="text-blue-500"href = {cardData["TCGPlayer"]["Link"]}>TCGPlayer</a>}
                     </p>

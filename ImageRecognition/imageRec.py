@@ -4,6 +4,9 @@ import os
 from paddleocr import PaddleOCR
 import numpy as np
 import requests
+from pathlib import Path #debugggin
+
+
 ocr = PaddleOCR(use_textline_orientation = True, use_doc_orientation_classify=False, use_doc_unwarping=False, lang = "en",enable_mkldnn=False)
 def train():
     model = YOLO("runs/detect/train-2/weights/best.pt")
@@ -17,8 +20,9 @@ def train():
 def drawOcr(image, ocrResults, confThreshold):
     texts = ocrResults["rec_texts"]
     confs = ocrResults["rec_scores"]
-    boxes = ocrResults["dt_polys"]
+    boxes = ocrResults["dt_polys"] 
     img = image.copy()
+    annotatedImage = image
     for text, conf, box in zip(texts, confs, boxes):
         if conf < confThreshold:#skip detections below confidence threshold
             continue
@@ -29,20 +33,21 @@ def drawOcr(image, ocrResults, confThreshold):
 output_folder = "cropped_cards"
 os.makedirs(output_folder, exist_ok=True,)
 
-#returns a dicitonary where the keys are the images in a numpy array and the value is the detected card id
+#returns a list of tuples where the first entry is the image in a numpy array and the second entry is the collector id
 def testModel(inputImage):
     croppedImages = []
-    infrence = {}
+    infrence = []
     rawDetect = []
-    model = YOLO("runs/detect/train-2/weights/best.pt")
+    model = YOLO("ImageRecognition/runs/detect/train-2/weights/best.pt")
     results = model.predict(inputImage, save=False, conf=0.25)
+    if(len(results) == 0):
+        return "No cards detected"
     for result in results: #.predict returns a list of results objects so we have to loop it
         img = result.orig_img
-        for box in result.boxes:
+        for i, box in enumerate(result.boxes):
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             cropped_image = img[y1:y2, x1:x2]
             croppedImages.append(cropped_image)
-            infrence[croppedImages] = ""
     ocrResults = ocr.predict(croppedImages)
     for i, image in enumerate(croppedImages):
         filePath = os.path.join(output_folder, f"annotated_{i}.jpg")
@@ -63,8 +68,8 @@ def testModel(inputImage):
                     else: #when we hit the end of the collector id break
                         break
                 if left and right: #this only runs if both of them are not empty
-                  infrence[image] = left + "/" + right
-    print(infrence["id"])
+                  infrence.append((image, left + "/" + right))
+    print(infrence)
     print(rawDetect)
     return infrence
 if __name__ == "__main__":

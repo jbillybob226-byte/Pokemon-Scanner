@@ -2,12 +2,21 @@ import { useState, useRef} from 'react';
 import './App.css';
 import Webcam from "react-webcam";
 import CardDetails from '@/components/CardDetails';
+import ImgDetails from '@/components/ImgDetails';
 
 export interface CardData {"PokemonInfo": {"Name": string, "setName": string, "cardID": string, "Image": string}, "PriceCharting": {"PSA 10": string, "Ungraded": string, "Grade9": string ,"Link": string}, "TCGPlayer": {"High Price": string, "Mid Price": string, "Low Price": string, "Market Price": string, "Link": string}, "cardMarket": {"Avg Price": string, "Low Price": string, "Link": string}}
-function displayCard(cardData: CardData, index: number){
+export  function displayCard(cardData: CardData, index: number){
     return(
         <li className = "color-aqua-500" key = {index}>
-            <CardDetails cardData = {cardData} index = {index}/>
+            <CardDetails cardData = {cardData}/>
+        </li>
+    );
+}
+function displayCardImg(cardData: CardData[], img: string, index: number){//incomplete make a modal that displays all the cropped images and when u click its all the possible cards it could be
+    console.log("image disp") 
+    return(
+        <li className = "" key = {index}>
+            <ImgDetails cardData = {cardData} img = {img}/>
         </li>
     );
 }
@@ -15,19 +24,21 @@ function App(){
   const [activeTab, setActiveTab] = useState<"search" | "image">("search")
   const [cardId, setCardId] = useState("");
   const [data, setData] = useState<CardData[]>([]);
+  const [dataFromImg, setDataFromImg] = useState<{[key: string]: CardData[]}>({});
   const [renderResults, setRenderResults] = useState<boolean>(false) 
   const [inputStatus, setInputStatus] = useState("Enter collector Id");
   const [images, setImages] = useState<string[]>([]); //stores images encoded in base 64 (like they are outputted from webcam class)
   const webcamRef = useRef<Webcam>(null);
+  const [renderRawImgs, setRenderRawImgs] = useState<boolean>(false)
   const videoConstraints = {
-    width: 720,
-    height: 1080,
-    facingMode: "environment"
+    width: 3672,
+    height: 6528,
+    facingMode: "environment"  
   };
   function handleScreenshot(){
     const screenShot = webcamRef.current?.getScreenshot();
     if(typeof screenShot == "string"){
-      setImages([...images, screenShot]);
+        setImages([...images, screenShot]);
     }
     console.log("imageTaken")
   }
@@ -56,10 +67,11 @@ function App(){
         console.log(response.status);
     }
     else{
-        console.log("SUCCESS!!!")
         setRenderResults(true)
         setImages([])
-        //call the api using each of the card ids
+        const results: Record<string, CardData[]> = await response.json()
+        setDataFromImg(results)
+        console.log("SUCCESS!!!")
     }
   }
   return( 
@@ -102,23 +114,34 @@ function App(){
                     ref = {webcamRef} 
                     screenshotFormat = "image/jpeg"
                     videoConstraints = {videoConstraints}
+                    forceScreenshotSourceSize={true}
                 />
                 <button
                     className = "w-40 h-10 mb-3 bg-blue-500"
-                    onClick = {() => handleScreenshot()} 
+                    onClick = {() => {
+                        handleScreenshot() 
+                        setRenderRawImgs(true)
+                        }
+                    } 
                 >
                     Take Image
                 </button>
-                <button className = "bg-blue-500" onClick = {sendImages}>
+                <button className = "bg-blue-500" onClick = {() => {
+                    setRenderRawImgs(false)
+                    sendImages()
+                    }
+                }>
                     Ready!
                 </button>
-                <ul className='flex flex-col gap-y-5'>{images.map((picture) => <img src = {picture}></img>)}</ul>
+                {renderRawImgs ? <ul className='flex flex-col mb-5 gap-y-5'>{images.map((picture, i) => <li key = {i}><img src = {picture}/></li>)}</ul>: (null)}
             </div>
             ) : (null)
         }
-        {(renderResults) ? (
-                <ul className = "flex flex-wrap p-0 gap-2 w-fit align-center mt-[50px] mx-auto mb-0 ">{data.map((card, i) => displayCard(card, i))}</ul> 
-            ) : (null)
+        {
+            (renderResults) ? (activeTab === "image" ? (
+                <ul className = "flex flex-wrap p-0 gap-2 w-fit align-center mt-[50px] mx-auto mb-0 ">{Object.entries(dataFromImg).map(([img, info], i) => displayCardImg(info, img, i))}</ul>) 
+                : (<ul className = "flex flex-wrap p-0 gap-2 w-fit align-center mt-[50px] mx-auto mb-0 ">{data.map((card, i) => displayCard(card, i))}</ul>)) 
+                : (null)
         }
     </div>
   );

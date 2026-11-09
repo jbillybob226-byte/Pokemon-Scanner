@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from pokemontcgsdk import Card
 import traceback
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 def formatString(input):
     input = input.split(" - ")[0]
     input = input.replace(" ", "-")
@@ -12,19 +12,32 @@ def formatString(input):
     return input
 pokewallet = "https://api.pokewallet.io/search"
 apiKey = {"X-API-Key": "pk_test_1455fa770d0218620d4b6b8a16d4be1317de0767e0417a54"}
+p = None
+browser = None
+
+async def startBrowser():
+    global p, browser
+    p = await async_playwright().start()
+    browser = await p.chromium.launch(headless = True)
+
+async def shutdownBrowser():
+    global browser
+    await browser.close()
+    async_playwright.stop()
+
 def get_card(cardFractions: list[str]): 
-    p = sync_playwright().start()
-    browser = p.chromium.launch(headless = True)
-    def return_page(url):
-        tab = browser.new_page()
+    print("getting cards " + cardFractions[0])
+    async def return_page(url):
+        tab = await browser.new_page()
         try:
             tab.goto(url)
             tab.wait_for_selector("img.v-lazy-image-loaded")
-            return tab.content()
+            return await tab.content()
         finally:
             tab.close()
     for i in range(0, len(cardFractions), 1):
         cardInfo = requests.get(pokewallet, headers = apiKey, params = {"q":f"{cardFractions[i]}"}).json()
+        print(cardInfo)
         if(len(cardInfo["results"]) == 0):
             return "404 NotFound"
         result = []
@@ -63,23 +76,31 @@ def get_card(cardFractions: list[str]):
                 image = imgFinder.find("img", class_ = "js-show-dialog")["src"]   
             except Exception:
                 try:
-                    print("could not find card")
                     imgPage = return_page(cardInfo["results"][n]["tcgplayer"]["url"])
                     imgFinder = BeautifulSoup(imgPage, "html.parser")
                     image = imgFinder.find("img", class_ = "v-lazy-image-loaded")["src"]
                     
                 except Exception:
                     traceback.print_exc()
-            TCGhigh = "-"
-            TCGmid = "-"
-            TCGlow = "-"
-            TCGmarket = "-"
-            TCGlink = "null"
-            if(cardInfo["results"][n]["tcgplayer"] is not None): 
+            try: #these are in their own try except statements just in case the api has one but not the others so it dont crash
                 TCGhigh = cardInfo["results"][n]["tcgplayer"]["prices"][0]["high_price"]
+            except:
+                TCGhigh = "-"
+            try:
                 TCGmid = cardInfo["results"][n]["tcgplayer"]["prices"][0]["mid_price"]
-                TCGlow = cardInfo["results"][n]["tcgplayer"]["prices"][0]["low_price"] 
+            except:
+                TCGmid = "-"
+            try:
+                TCGlow = cardInfo["results"][n]["tcgplayer"]["prices"][0]["low_price"]
+            except:
+                TCGlow = "-" 
+            try:
                 TCGmarket = cardInfo["results"][n]["tcgplayer"]["prices"][0]["market_price"]
+            except:
+                TCGmarket = "-"
+            try:
                 TCGlink = cardInfo["results"][n]["tcgplayer"]["url"]
+            except:
+                TCGlink = "null"
             result.append({"PokemonInfo": {"Name": pokemonName, "setName": setName, "cardID": cardFractions[i], "Image" : image}, "PriceCharting": {"PSA 10": PSA10, "Grade9": Grade9 , "Ungraded": ungraded, "Link": url}, "TCGPlayer": {"High Price": TCGhigh, "Mid Price": TCGmid, "Low Price": TCGlow, "Market Price": TCGmarket, "Link": TCGlink}})
     return result
